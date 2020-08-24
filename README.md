@@ -1,4 +1,4 @@
-# Ray_Tracer
+# RayTracer
 
 Simple ray_tracer for generation 3D-photorealistic images with reflections and highlights
 
