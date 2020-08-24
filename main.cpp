@@ -8,7 +8,8 @@
 
 using namespace std;
 
-const double eps = 1e-4;
+const double EPS = 1e-4;
+const int MAX_DEEP = 200;
 
 int foo = 0;
 bool debug = 0;
@@ -50,8 +51,8 @@ pair<double, int> get_min_distance(Ray r) {
     return {t, num};
 }
 
-Pixel trace(Ray r, double refl, int deep) {
-    if (refl <= eps || deep >= 100) {
+Pixel trace(Ray r, double refl = 1., int deep = 0.) {
+    if (refl <= EPS || deep >= MAX_DEEP) {
         return Pixel();
     }
     int num;
@@ -69,7 +70,7 @@ Pixel trace(Ray r, double refl, int deep) {
     double light = 0;
     for (auto &x: lights) {
         Ray tr(r.pos, x.first - r.pos);
-        tr.move(eps);
+        tr.move(EPS);
         double dst = get_min_distance(tr).first;
 
         // cout << "pos = " << r.pos.x << " " << r.pos.y << " " << r.pos.z << "\n";
@@ -82,21 +83,22 @@ Pixel trace(Ray r, double refl, int deep) {
             foo++;
         }
     }
-    r.move(eps);
+    r.move(EPS);
     return scene[num].mat.color * (light + scene[num].mat.light) + trace(r, scene[num].mat.reflect * refl, deep + 1) * scene[num].mat.reflect;
 }
 
 int main() {
-    int X = 1920, Y = 1080;
+    int X = 2000, Y = 2000;
     BMP img;
     img.SetSize(X, Y);
 
     // BackGround
-    scene.push_back(Sphere(Point(1000, 0, 0), 998, Material(Pixel(0, 0, 0), 0.8, 0.5)));
+    // scene.push_back(Sphere(Point(0, 0, 0), 998, Material(Pixel(255, 255, 255), 0.8, 0.5)));
 
     // Scene
-    scene.push_back(Sphere(Point(0, 0.5, -0.3), 0.5, Material(Pixel(0, 0, 100), 0.1, 0.5)));
-    scene.push_back(Sphere(Point(0, -0.5, 0.3), 0.5, Material(Pixel(0, 100, 0), 0.1, 0.5)));
+    scene.push_back(Sphere(Point(3.9, 1.15, -0.3), 1, Material(Pixel(0, 0, 100), 0.1, 0.5)));
+    scene.push_back(Sphere(Point(4, -1.15, 0.3), 1, Material(Pixel(100, 0, 0), 0.6, 0)));
+    // scene.push_back(Sphere(Point(0, -0.5, 0.3), 0.5, Material(Pixel(0, 100, 0), 0.1, 0.5)));
     // scene.push_back(Sphere(Point(100, 0, 0), 99, Material(Pixel(0, 0, 0), 0.7, 0)));
     // scene.push_back(Sphere(Point(-100, 0, 0), 99, Material(Pixel(0, 0, 0), 0.7, 0)));
 
@@ -104,10 +106,9 @@ int main() {
     // scene.push_back(Sphere(Point(1.5, 0, 0), 0.2, Material(Pixel(255, 0, 0), 0, 0.5)));
 
     // Light
-
-    lights.push_back({Point(1.5, -1, 0.2), 6});
+    // lights.push_back({Point(-1, 2, 10), 6});
     lights.push_back({Point(1.5, -1, -0.2), 6});
-    lights.push_back({Point(0, 0, 0), 6});
+    lights.push_back({Point(4, 0, 0), 6});
 
     // Process
     int progress = 0;
@@ -115,7 +116,7 @@ int main() {
         for (int j = 0; j < Y; j++) {
             Point d(1, (i - X / 2) / (X / 2.0), (j - Y / 2) / (Y / 2.0));
 
-            img.SetPixel(i, j, trace(Ray(Point(0, 0, 0), d), 1, 0).toBMPPixel(0.5));
+            img.SetPixel(i, j, trace(Ray(Point(0, 0, 0), d)).toBMPPixel(0.5));
 
             progress++;
             if ((progress - 1) * 100 / (X * Y) != progress * 100 / (X * Y)) {
